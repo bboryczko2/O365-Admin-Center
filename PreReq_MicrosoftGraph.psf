@@ -1,0 +1,149 @@
+<File version="3.5">
+  <FileID>PreReq_MicrosoftGraph_form</FileID>
+  <Preview>iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAA=</Preview>
+  <Object type="System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="form_prereqMicrosoftGraph" children="Controls">
+    <Property name="AutoScaleDimensions">144, 144</Property>
+    <Property name="AutoScaleMode">Dpi</Property>
+    <Property name="ClientSize">638, 163</Property>
+    <Property name="Font">Segoe UI, 8.25pt</Property>
+    <Property name="FormBorderStyle">FixedDialog</Property>
+    <Property name="MaximizeBox">False</Property>
+    <Property name="Name">form_prereqMicrosoftGraph</Property>
+    <Property name="StartPosition">CenterScreen</Property>
+    <Property name="Text">Microsoft Graph Module Required</Property>
+    <Event name="Load">form_prereqMicrosoftGraph_Load</Event>
+    <Object type="System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="buttonDontAsk" children="Controls">
+      <Property name="Anchor">Bottom, Right</Property>
+      <Property name="DialogResult">Abort</Property>
+      <Property name="Font">Segoe UI, 8pt</Property>
+      <Property name="Location">423, 114</Property>
+      <Property name="Name">buttonDontAsk</Property>
+      <Property name="Size">158, 37</Property>
+      <Property name="TabIndex">3</Property>
+      <Property name="Text">&amp;Don't Ask Again</Property>
+      <Property name="UseVisualStyleBackColor">True</Property>
+      <Event name="Click">buttonDontAsk_Click</Event>
+    </Object>
+    <Object type="System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="buttonYes" children="Controls">
+      <Property name="DialogResult">Yes</Property>
+      <Property name="Font">Segoe UI, 8pt</Property>
+      <Property name="Location">53, 114</Property>
+      <Property name="Name">buttonYes</Property>
+      <Property name="Size">118, 37</Property>
+      <Property name="TabIndex">1</Property>
+      <Property name="Text">&amp;Yes</Property>
+      <Property name="UseVisualStyleBackColor">True</Property>
+      <Event name="Click">buttonYes_Click</Event>
+    </Object>
+    <Object type="System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="labelMicrosoftGraph" children="Controls">
+      <Property name="Font">Segoe UI, 8pt</Property>
+      <Property name="Location">12, 9</Property>
+      <Property name="Name">labelMicrosoftGraph</Property>
+      <Property name="Size">614, 87</Property>
+      <Property name="TabIndex">24</Property>
+      <Property name="Text">Microsoft Graph PowerShell module appears to not be installed. This modern authentication module is required for Office 365 connectivity with Multi-Factor Authentication support. Would you like to install it now?</Property>
+      <Property name="TextAlign">MiddleLeft</Property>
+    </Object>
+    <Object type="System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" name="buttonNo" children="Controls">
+      <Property name="Anchor">Bottom, Right</Property>
+      <Property name="DialogResult">No</Property>
+      <Property name="Font">Segoe UI, 8pt</Property>
+      <Property name="Location">241, 114</Property>
+      <Property name="Name">buttonNo</Property>
+      <Property name="Size">118, 37</Property>
+      <Property name="TabIndex">2</Property>
+      <Property name="Text">&amp;No</Property>
+      <Property name="UseVisualStyleBackColor">True</Property>
+    </Object>
+  </Object>
+  <Code><![CDATA[
+$form_prereqMicrosoftGraph_Load = {
+	# Check if user has disabled this prompt via registry
+	try {
+		$regPath = 'HKCU:\Software\O365 Admin Center'
+		if (Test-Path $regPath) {
+			$disablePrompt = Get-ItemProperty -Path $regPath -Name DisableMicrosoftGraphPrompt -ErrorAction SilentlyContinue
+			if ($disablePrompt.DisableMicrosoftGraphPrompt -eq 1) {
+				$form_prereqMicrosoftGraph.DialogResult = [System.Windows.Forms.DialogResult]::Abort
+				$form_prereqMicrosoftGraph.Close()
+				return
+			}
+		}
+	}
+	catch {
+		# Continue if registry check fails
+	}
+	
+	# Check if Microsoft Graph module is already installed
+	$graphModule = Get-Module -ListAvailable -Name Microsoft.Graph
+	if ($graphModule) {
+		# Module is installed, close the form
+		$form_prereqMicrosoftGraph.DialogResult = [System.Windows.Forms.DialogResult]::OK
+		$form_prereqMicrosoftGraph.Close()
+	}
+}
+
+$buttonYes_Click = {
+	try {
+		# Show progress
+		$buttonYes.Text = "Installing..."
+		$buttonYes.Enabled = $false
+		$buttonNo.Enabled = $false
+		$buttonDontAsk.Enabled = $false
+		
+		# Install Microsoft Graph PowerShell SDK and related modules
+		Write-Host "Installing Microsoft Graph PowerShell SDK..."
+		Install-Module Microsoft.Graph -Scope CurrentUser -Force -AllowClobber
+		
+		Write-Host "Installing Exchange Online Management module..."
+		Install-Module ExchangeOnlineManagement -Scope CurrentUser -Force -AllowClobber
+		
+		Write-Host "Installing SharePoint Online Management module..."
+		Install-Module Microsoft.Online.SharePoint.PowerShell -Scope CurrentUser -Force -AllowClobber
+		
+		Write-Host "Installing Microsoft Teams module..."
+		Install-Module MicrosoftTeams -Scope CurrentUser -Force -AllowClobber
+		
+		Write-Host "Modern Office 365 modules installed successfully."
+		$form_prereqMicrosoftGraph.DialogResult = [System.Windows.Forms.DialogResult]::OK
+		$form_prereqMicrosoftGraph.Close()
+	}
+	catch {
+		# Re-enable buttons on error
+		$buttonYes.Text = "&Yes"
+		$buttonYes.Enabled = $true
+		$buttonNo.Enabled = $true
+		$buttonDontAsk.Enabled = $true
+		
+		[System.Windows.Forms.MessageBox]::Show("Failed to install modules: $($_.Exception.Message)", "Installation Error", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+	}
+}
+
+$buttonDontAsk_Click = {
+	# Set registry key to not ask again
+	try {
+		$regPath = 'HKCU:\Software\O365 Admin Center'
+		if (!(Test-Path $regPath)) {
+			New-Item -Path $regPath -Force | Out-Null
+		}
+		New-ItemProperty -Path $regPath -Name DisableMicrosoftGraphPrompt -Value 1 -PropertyType DWord -Force | Out-Null
+	}
+	catch {
+		Write-Warning "Could not save preference to registry"
+	}
+	$form_prereqMicrosoftGraph.DialogResult = [System.Windows.Forms.DialogResult]::Abort
+	$form_prereqMicrosoftGraph.Close()
+}
+]]></Code>
+  <Mode>0</Mode>
+  <Assemblies>
+    <Assembly>mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <Assembly>System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+    <Assembly>System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</Assembly>
+  </Assemblies>
+</File>
