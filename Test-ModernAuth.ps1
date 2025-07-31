@@ -25,7 +25,7 @@ try {
     if (Get-Command -Name Connect-O365Modern -ErrorAction SilentlyContinue) {
         Write-Host "   ✅ Modern auth functions available globally" -ForegroundColor Green
     } else {
-        Write-Host "   ⚠️  Modern auth functions not found globally" -ForegroundColor Orange
+        Write-Host "   ⚠️  Modern auth functions not found globally" -ForegroundColor DarkYellow
     }
 } catch {
     Write-Host "   ❌ Failed to load Globals.ps1: $($_.Exception.Message)" -ForegroundColor Red
@@ -40,7 +40,7 @@ try {
     if ($moduleStatus) {
         Write-Host "   ✅ All required modern modules are installed" -ForegroundColor Green
     } else {
-        Write-Host "   ⚠️  Some modern modules are missing (this is expected for first run)" -ForegroundColor Orange
+        Write-Host "   ⚠️  Some modern modules are missing (this is expected for first run)" -ForegroundColor DarkYellow
         Write-Host "   📝 The application will prompt to install them when needed" -ForegroundColor Gray
     }
 } catch {

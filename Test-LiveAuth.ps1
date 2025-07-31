@@ -11,7 +11,7 @@ Import-Module ".\ModernAuth.psm1" -Force
 Write-Host "Step 1: Check module installation status..." -ForegroundColor Yellow
 $modulesInstalled = Test-ModernModulesInstalled
 if (-not $modulesInstalled) {
-    Write-Host "⚠️  Modern modules not installed. The app would normally prompt to install them." -ForegroundColor Orange
+    Write-Host "⚠️  Modern modules not installed. The app would normally prompt to install them." -ForegroundColor DarkYellow
     Write-Host ""
     Write-Host "To install manually, run:" -ForegroundColor Gray
     Write-Host "Install-Module Microsoft.Graph -Scope CurrentUser -Force" -ForegroundColor White
@@ -22,7 +22,7 @@ if (-not $modulesInstalled) {
     Write-Host ""
     
     Write-Host "Step 2: Test connection (this would prompt for authentication)..." -ForegroundColor Yellow
-    Write-Host "⚠️  Skipping actual connection to avoid authentication prompt in test" -ForegroundColor Orange
+    Write-Host "⚠️  Skipping actual connection to avoid authentication prompt in test" -ForegroundColor DarkYellow
     Write-Host ""
     Write-Host "To test live connection, run:" -ForegroundColor Gray
     Write-Host "Connect-O365Modern -UseDeviceCodeAuth" -ForegroundColor White
